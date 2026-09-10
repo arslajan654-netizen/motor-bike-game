@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07101f">
+<title>Velocity Storm Rider — Motorbike Missions</title>
+<style>
+:root{
+  --bg:#07101f;
+  --ink:#f4f7fb;
+  --muted:#91a0b8;
+  --cyan:#67f3e7;
+  --orange:#ff7a45;
+  --pink:#ff4f8f;
+  --green:#9cff6b;
+  --red:#ff4d45;
+  --glass:rgba(9,16,31,.72);
+  --line:rgba(255,255,255,.16);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Inter,Arial,Helvetica,sans-serif;touch-action:none;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:none}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;background:#07101f}
+.vignette{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(0,0,0,.38) 100%)}
+.scan{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.055;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.5) 4px)}
+#flash{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(circle,rgba(255,255,255,.65),rgba(255,90,60,.28) 45%,transparent 70%)}
+#lightning{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:white}
+header{position:fixed;left:24px;right:24px;top:max(18px,env(safe-area-inset-top));z-index:40;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--orange),var(--pink));display:grid;place-items:center;box-shadow:0 0 28px rgba(255,122,69,.35);font-weight:1000;font-style:italic;color:#10131d;transform:skewX(-10deg)}
+.brand b{font-size:22px;font-weight:1000;font-style:italic;letter-spacing:-1px}
+.brand span{display:block;font-size:8px;letter-spacing:2.4px;color:#aeb9cb;margin-top:4px}
+.topButtons{display:flex;gap:8px;pointer-events:auto}
+.icon{width:42px;height:42px;border:1px solid var(--line);border-radius:10px;background:rgba(7,13,26,.55);backdrop-filter:blur(10px);display:grid;place-items:center;transition:.18s}
+.icon:hover{border-color:rgba(255,255,255,.38);background:rgba(255,255,255,.08)}
+.icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+body[data-state="start"] #pauseBtn,body[data-state="over"] #pauseBtn{display:none}
+.screen{position:fixed;inset:0;z-index:30;display:none}
+body[data-state="start"] #startScreen{display:flex}
+#startScreen{align-items:center;padding:92px 7vw;background:linear-gradient(90deg,rgba(5,10,22,.93),rgba(5,10,22,.72) 38%,rgba(5,10,22,.2) 70%,transparent)}
+.hero{max-width:750px;animation:pop .55s ease both}
+.eyebrow{display:flex;align-items:center;gap:12px;color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:2.4px}
+.eyebrow:before{content:"";width:34px;height:2px;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+h1{font-size:clamp(58px,9.2vw,132px);line-height:.87;margin:24px 0 20px;font-weight:1000;font-style:italic;letter-spacing:-.08em;transform:scaleX(.88);transform-origin:left}
+h1 span{display:block;white-space:nowrap}.hot{color:var(--orange)}
+.hero p{max-width:470px;font-size:15px;line-height:1.75;color:#b9c4d6;margin:0 0 28px}
+.primary{min-height:58px;padding:18px 24px;border-radius:9px;background:linear-gradient(135deg,var(--orange),#ffb05f);color:#111827;font-size:12px;font-weight:1000;letter-spacing:1.3px;display:inline-flex;gap:36px;align-items:center;justify-content:space-between;box-shadow:0 12px 40px rgba(255,122,69,.28);transition:.18s}
+.primary:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.secondary{min-height:48px;padding:14px 20px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:11px;font-weight:900;letter-spacing:1.3px}
+.secondary:hover{background:rgba(255,255,255,.09)}
+.startGrid{display:grid;grid-template-columns:repeat(5, minmax(70px,1fr));gap:10px;margin-top:30px;max-width:720px}
+.weatherCard{border:1px solid var(--line);border-radius:12px;background:rgba(10,18,35,.62);padding:12px;backdrop-filter:blur(6px)}
+.weatherCard b{display:block;font-size:12px;color:#fff;margin-bottom:6px}.weatherCard span{font-size:8px;color:#95a5bc;letter-spacing:1px}
+.startFooter{position:absolute;left:7vw;right:28px;bottom:max(24px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;color:#a6b3c8}
+.best{font-size:9px;letter-spacing:1.7px}.best b{display:block;color:#fff;font-size:19px;margin-top:7px}
+.controls{text-align:right;font-size:9px;letter-spacing:1.2px;line-height:2}
+kbd{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 7px;margin:0 2px;border-radius:5px;border:1px solid rgba(255,255,255,.25);border-bottom-width:2px;background:rgba(4,9,18,.55);font-size:10px;color:#ecf4ff}
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:none}
+body[data-state="playing"] #hud,body[data-state="countdown"] #hud,body[data-state="paused"] #hud{display:block}
+.topHud{position:absolute;top:84px;left:24px;right:24px;display:grid;grid-template-columns:170px minmax(220px,1fr) 220px;gap:22px;align-items:start}
+.panel{border:1px solid var(--line);background:rgba(7,13,26,.42);backdrop-filter:blur(8px);border-radius:14px;padding:14px}
+.label{font-size:9px;letter-spacing:1.8px;color:#9facbf;font-weight:900}
+.big{font-size:40px;font-weight:1000;letter-spacing:-2px;line-height:1.05;font-variant-numeric:tabular-nums;margin-top:5px}
+.big small{font-size:13px;color:#9facbf;letter-spacing:0}
+#timer.urgent{color:var(--red);animation:pulse .45s alternate infinite}
+.routeTop{display:flex;justify-content:space-between;font-size:9px;letter-spacing:1.2px;color:#c7d2e4}
+.bar{position:relative;margin:14px 0 10px;height:6px;border-radius:10px;background:rgba(255,255,255,.15);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--cyan));box-shadow:0 0 18px rgba(103,243,231,.55)}
+#routeDot{position:absolute;top:50%;left:0;width:14px;height:14px;border-radius:50%;background:white;border:3px solid var(--orange);transform:translate(-50%,-50%);box-shadow:0 0 18px var(--orange)}
+.routeInfo{display:flex;justify-content:space-between;font-size:9px;color:#98a8bd;letter-spacing:1px}
+.weatherNow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.weatherIcon{font-size:34px;filter:drop-shadow(0 0 14px rgba(255,255,255,.2))}
+#weatherName{font-size:20px;font-weight:1000;font-style:italic;letter-spacing:-.8px}
+#weatherEffect{font-size:8px;color:#96a7be;letter-spacing:1.1px;margin-top:5px}
+.midHud{position:absolute;left:24px;bottom:24px;width:260px}
+.speed{font-size:82px;font-weight:1000;font-style:italic;line-height:.9;letter-spacing:-6px;text-shadow:0 8px 30px #000}
+.speedMeta{display:flex;gap:16px;align-items:center;margin-top:12px;color:#aab7ca;font-size:10px;letter-spacing:1.7px}
+.gear{border:1px solid var(--line);border-radius:5px;padding:5px 9px;color:white}
+.boostBox{margin-top:15px}
+.boostHead{display:flex;justify-content:space-between;color:var(--cyan);font-size:10px;font-weight:1000;letter-spacing:1.5px}
+.boostMeter{height:12px;margin-top:8px;transform:skewX(-12deg);background:rgba(103,243,231,.13);overflow:hidden}
+#boostFill{height:100%;width:100%;background:var(--cyan);box-shadow:0 0 22px var(--cyan)}
+body.boosting #boostFill{background:white}
+.missionBox{position:absolute;right:24px;bottom:24px;width:330px}
+.missionTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.missionTitle b{font-size:12px;letter-spacing:1.8px;color:#fff}
+.missionTitle span{font-size:9px;color:var(--cyan);letter-spacing:1.2px}
+.mission{display:flex;gap:9px;align-items:center;margin:8px 0;color:#bac5d6;font-size:11px;line-height:1.25}
+.check{flex:0 0 19px;width:19px;height:19px;border-radius:50%;border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;color:#07101f;font-weight:1000;font-size:12px}
+.mission.done{color:white}.mission.done .check{background:var(--green);border-color:var(--green)}
+.healthWrap{display:flex;gap:5px;margin-top:12px;align-items:center}
+.healthWrap span{font-size:9px;letter-spacing:1.4px;color:#9facbf;margin-right:5px}
+.hp{height:6px;flex:1;border-radius:5px;background:var(--cyan);box-shadow:0 0 10px rgba(103,243,231,.25)}
+.hp.empty{background:rgba(255,255,255,.13);box-shadow:none}
+.hp.danger{background:var(--red)}
+#toast{position:absolute;top:28%;left:50%;transform:translate(-50%,-12px);text-align:center;opacity:0;transition:.18s;white-space:nowrap;text-shadow:0 3px 20px #000}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast b{display:block;font-size:28px;font-style:italic;font-weight:1000;color:var(--cyan)}
+#toast span{display:block;margin-top:6px;font-size:10px;letter-spacing:1.7px;color:#eef5ff}
+#toast.danger b{color:var(--orange)}
+#countdown{z-index:29;align-items:center;justify-content:center;flex-direction:column;background:rgba(7,13,26,.12);pointer-events:none}
+body[data-state="countdown"] #countdown{display:flex}
+#countNum{font-size:150px;font-weight:1000;font-style:italic;color:var(--orange);text-shadow:0 0 70px rgba(255,122,69,.35)}
+#countdown span{font-size:12px;letter-spacing:5px;color:#dce8f8}
+#pauseScreen,#overScreen{align-items:center;justify-content:center;background:rgba(3,8,18,.68);backdrop-filter:blur(10px);padding:22px}
+body[data-state="paused"] #pauseScreen,body[data-state="over"] #overScreen{display:flex}
+.card{width:min(560px,100%);border:1px solid rgba(255,255,255,.16);border-top:2px solid var(--orange);border-radius:16px;background:linear-gradient(145deg,rgba(20,31,52,.98),rgba(7,12,24,.98));box-shadow:0 30px 90px rgba(0,0,0,.45);padding:34px;animation:pop .25s ease both}
+.card h2{font-size:52px;font-weight:1000;font-style:italic;line-height:.95;letter-spacing:-2.5px;margin:18px 0 12px}
+.card p{margin:0;color:#b1bfd3;font-size:13px;line-height:1.65}
+.card .primary,.card .secondary{width:100%;margin-top:14px;justify-content:center}
+.results{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}
+.stat{border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.035)}
+.stat b{display:block;font-size:23px;letter-spacing:-1px}.stat span{font-size:8px;color:#91a0b8;letter-spacing:1px}
+.endMissions{margin:14px 0 4px;border-top:1px solid var(--line);padding-top:14px}
+#touch{position:fixed;z-index:20;left:18px;right:18px;bottom:max(18px,env(safe-area-inset-bottom));display:none;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.touchLeft{display:flex;gap:10px;align-items:flex-end}
+.tbtn{pointer-events:auto;width:64px;height:64px;border-radius:16px;border:1px solid rgba(255,255,255,.22);background:rgba(9,16,31,.58);backdrop-filter:blur(8px);display:grid;place-items:center;color:white}
+.tbtn svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.tbtn.active{transform:translateY(2px);border-color:var(--cyan);background:rgba(103,243,231,.18)}
+#touchBrake{width:48px;height:52px;font-size:8px;letter-spacing:1px;color:#c6d2e4}
+#touchBoost{width:82px;height:82px;border-radius:50%;color:var(--cyan);font-size:9px;font-weight:1000;letter-spacing:1px;border-color:rgba(103,243,231,.55);box-shadow:0 0 24px rgba(103,243,231,.12),inset 0 0 24px rgba(103,243,231,.08)}
+@keyframes pop{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{from{opacity:1}to{opacity:.52}}
+@media(pointer:coarse){body[data-state="playing"] #touch,body[data-state="countdown"] #touch{display:flex}.midHud{bottom:112px}.missionBox{bottom:112px}}
+@media(max-width:760px){
+ header{left:17px;right:17px}.logo{width:35px;height:35px}.brand b{font-size:18px}.brand span{font-size:6px;letter-spacing:1.9px}.icon{width:36px;height:36px}
+ #startScreen{padding:78px 22px;background:linear-gradient(90deg,rgba(5,10,22,.9),rgba(5,10,22,.35))}
+ h1{font-size:16.5vw;margin:20px 0}.hero p{font-size:12px;max-width:310px}.primary{min-height:52px;font-size:10px;padding:16px 19px}
+ .startGrid{grid-template-columns:repeat(2,1fr);max-width:330px;margin-top:22px}.weatherCard:nth-child(5){grid-column:1/3}
+ .startFooter{left:22px;right:22px}.controls kbd,.controls{display:none}.best b{font-size:15px}
+ .topHud{top:72px;left:16px;right:16px;grid-template-columns:1fr 1fr;gap:10px}.topHud .panel:nth-child(2){grid-column:1/3;grid-row:2}.topHud .panel{padding:11px}
+ .big{font-size:31px}.weatherIcon{font-size:28px}#weatherName{font-size:16px}
+ .midHud{left:16px;width:190px}.speed{font-size:58px;letter-spacing:-4px}.boostBox{width:150px}
+ .missionBox{right:16px;width:190px}.mission{font-size:9px}.missionTitle b{font-size:10px}.missionTitle span{display:none}
+ #toast{top:31%;max-width:96%}#toast b{font-size:21px}#toast span{font-size:8px;letter-spacing:1px}
+ #countNum{font-size:118px}.card{padding:26px}.card h2{font-size:40px}.results{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-height:650px) and (min-width:761px){
+ .topHud{top:70px}.speed{font-size:62px}.midHud,.missionBox{bottom:16px}.card{padding:25px}.card h2{font-size:40px}.results{margin:14px 0}
+}
+</style>
+</head>
+<body data-state="start">
+<canvas id="game" aria-label="Racing motorbike mission game"></canvas>
+<div class="vignette"></div>
+<div class="scan"></div>
+<div id="flash"></div>
+<div id="lightning"></div>
+
+<header>
+  <div class="brand">
+    <div class="logo">V</div>
+    <div><b>VELOCITY</b><span>STORM RIDER MISSIONS</span></div>
+  </div>
+  <div class="topButtons">
+    <button class="icon" id="soundBtn" aria-label="Toggle sound" title="Sound (M)">
+      <svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path id="soundWave" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg>
+    </button>
+    <button class="icon" id="fullBtn" aria-label="Fullscreen" title="Fullscreen">
+      <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></svg>
+    </button>
+    <button class="icon" id="pauseBtn" aria-label="Pause" title="Pause (Esc)">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></svg>
+    </button>
+  </div>
+</header>
+
+<section id="startScreen" class="screen">
+  <div class="hero">
+    <div class="eyebrow">5 WEATHER FRONTS · 5KM MIDNIGHT RACE</div>
+    <h1><span>STORM</span><span class="hot">RIDER.</span></h1>
+    <p>Race a neon superbike through traffic, changing weather, and mission objectives. Clear skies become rain, fog, snow, and a lightning storm before the finish line.</p>
+    <button class="primary" id="startBtn">IGNITE ENGINE <span>↗</span></button>
+    <div class="startGrid">
+      <div class="weatherCard"><b>☾ Clear</b><span>MAX GRIP</span></div>
+      <div class="weatherCard"><b>☔ Rain</b><span>SLICK LANES</span></div>
+      <div class="weatherCard"><b>▧ Fog</b><span>LOW VISIBILITY</span></div>
+      <div class="weatherCard"><b>❄ Snow</b><span>HEAVY DRAG</span></div>
+      <div class="weatherCard"><b>⚡ Storm</b><span>CHAOS MODE</span></div>
+    </div>
+  </div>
+  <div class="startFooter">
+    <div class="best">PERSONAL BEST<b id="bestStart">— — —</b></div>
+    <div class="controls">
+      <div><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> STEER</div>
+      <div><kbd>SPACE</kbd> BOOST · <kbd>S</kbd> BRAKE · <kbd>ESC</kbd> PAUSE</div>
+    </div>
+  </div>
+</section>
+
+<div id="hud">
+  <div class="topHud">
+    <div class="panel">
+      <div class="label">TIME LEFT</div>
+      <div class="big"><span id="timer">95.0</span><small> SEC</small></div>
+    </div>
+    <div class="panel">
+      <div class="routeTop"><span id="sectorText">SECTOR 1 / CLEAR NIGHT</span><span>FINISH 5.00 KM</span></div>
+      <div class="bar"><i id="routeFill"></i><div id="routeDot"></div></div>
+      <div class="routeInfo"><span id="distanceText">0.00 KM</span><span id="nextText">↑ OPEN STRAIGHT</span></div>
+    </div>
+    <div class="panel weatherNow">
+      <div>
+        <div class="label">WEATHER</div>
+        <div id="weatherName">CLEAR</div>
+        <div id="weatherEffect">PERFECT GRIP</div>
+      </div>
+      <div class="weatherIcon" id="weatherIcon">☾</div>
+    </div>
+  </div>
+
+  <div class="midHud">
+    <div class="speed"><span id="speedText">000</span></div>
+    <div class="speedMeta"><span>KM/H</span><span class="gear">GEAR <b id="gearText">N</b></span><span id="scoreText">000000</span></div>
+    <div class="boostBox">
+      <div class="boostHead"><span>NITRO</span><span id="boostPct">100%</span></div>
+      <div class="boostMeter"><div id="boostFill"></div></div>
+    </div>
+  </div>
+
+  <div class="panel missionBox">
+    <div class="missionTitle"><b>LIVE MISSIONS</b><span id="missionCount">0/5 COMPLETE</span></div>
+    <div id="missionList"></div>
+    <div class="healthWrap"><span>BIKE</span><i class="hp"></i><i class="hp"></i><i class="hp"></i><i class="hp"></i><i class="hp"></i></div>
+  </div>
+
+  <div id="toast"><b></b><span></span></div>
+</div>
+
+<section id="countdown" class="screen">
+  <span>MISSION START</span>
+  <div id="countNum">3</div>
+  <span>BEAT TRAFFIC · SURVIVE WEATHER</span>
+</section>
+
+<div id="touch">
+  <div class="touchLeft">
+    <button class="tbtn" id="touchLeft" aria-label="Steer left"><svg viewBox="0 0 24 24"><path d="m14 5-7 7 7 7"/></svg></button>
+    <button class="tbtn" id="touchRight" aria-label="Steer right"><svg viewBox="0 0 24 24"><path d="m10 5 7 7-7 7"/></svg></button>
+    <button class="tbtn" id="touchBrake" aria-label="Brake">BRAKE</button>
+  </div>
+  <button class="tbtn" id="touchBoost" aria-label="Boost">BOOST</button>
+</div>
+
+<section id="pauseScreen" class="screen">
+  <div class="card">
+    <div class="eyebrow">ENGINE IDLING</div>
+    <h2>RACE<br>PAUSED.</h2>
+    <p>The storm waits for nobody. Resume the run or restart the mission from sector one.</p>
+    <button class="primary" id="resumeBtn">BACK TO THE ROAD</button>
+    <button class="secondary" id="restartBtn">RESTART RUN</button>
+    <button class="secondary" id="menuBtn">MAIN MENU</button>
+  </div>
+</section>
+
+<section id="overScreen" class="screen">
+  <div class="card">
+    <div class="eyebrow" id="endBadge">RACE COMPLETE</div>
+    <h2 id="endTitle">FINISH<br>LINE.</h2>
+    <p id="endReason">You conquered the full storm route.</p>
+    <div class="results">
+      <div class="stat"><b id="finalScore">0</b><span>SCORE</span></div>
+      <div class="stat"><b id="finalDist">0.00</b><span>KM</span></div>
+      <div class="stat"><b id="finalNear">0</b><span>CLOSE CALLS</span></div>
+      <div class="stat"><b id="finalMissions">0/5</b><span>MISSIONS</span></div>
+    </div>
+    <div class="endMissions" id="endMissions"></div>
+    <button class="primary" id="againBtn">ONE MORE RUN</button>
+    <button class="secondary" id="mainBtn">MAIN MENU</button>
+  </div>
+</section>
+
+<script>
+(() => {
+'use strict';
+
+const $ = id => document.getElementById(id);
+const canvas = $('game');
+const ctx = canvas.getContext('2d', { alpha:false });
+
+let W = 0, H = 0, DPR = 1;
+const FINISH = 5000;
+const VIEW = 470;
+const LANES = [-0.58, 0, 0.58];
+const WEATHER = [
+  {name:'CLEAR', icon:'☾', effect:'PERFECT GRIP', sky:['#071327','#162447','#6d4350'], grip:1, max:1, visibility:1},
+  {name:'RAIN', icon:'☔', effect:'SLICK LANES', sky:['#07101d','#16263c','#41546c'], grip:.82, max:.98, visibility:.86},
+  {name:'FOG', icon:'▧', effect:'LOW VISIBILITY', sky:['#111722','#334052','#909dad'], grip:.95, max:.94, visibility:.56},
+  {name:'SNOW', icon:'❄', effect:'HEAVY DRAG', sky:['#0c1524','#2d425b','#aebccc'], grip:.72, max:.87, visibility:.76},
+  {name:'STORM', icon:'⚡', effect:'LIGHTNING CHAOS', sky:['#050813','#10182e','#52385d'], grip:.70, max:1.02, visibility:.72}
+];
+
+let state = 'start', previousState = 'playing';
+let last = performance.now(), clock = 0;
+let position = 0, speed = 0, playerX = 0, lean = 0, steer = 0;
+let boost = 100, health = 100, timeLeft = 95, score = 0, topSpeed = 0;
+let closeCalls = 0, cells = 0, hitCount = 0, completedWeather = new Set(), weatherIndex = 0;
+let countdown = 3, countdownLast = 3, bonus = 0, invuln = 0, shake = 0, flash = 0;
+let best = 0, muted = false, lightningFlash = 0, stormTimer = 0;
+let toastTimer = 0, dragStart = null, dragValue = 0;
+const keys = {};
+const touch = {left:false,right:false,brake:false,boost:false};
+const traffic = [], pickups = [], sparks = [], weatherParticles = [];
+
+try { best = Number(localStorage.getItem('velocity-storm-best')) || 0; } catch(e) {}
+$('bestStart').textContent = best ? best.toLocaleString('en-US') : '— — —';
+
+function resize(){
+  W = innerWidth; H = innerHeight; DPR = Math.min(devicePixelRatio || 1, 1.75);
+  canvas.width = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  buildWeatherParticles();
+}
+addEventListener('resize', resize);
+resize();
+
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function lerp(a,b,t){ return a + (b-a)*t; }
+function rand(a,b){ return a + Math.random()*(b-a); }
+
+function setState(s){
+  state = s;
+  document.body.dataset.state = s;
+}
+
+function showToast(title, sub='', danger=false, t=1.8){
+  const box = $('toast');
+  box.querySelector('b').textContent = title;
+  box.querySelector('span').textContent = sub;
+  box.classList.toggle('danger', danger);
+  box.classList.add('show');
+  toastTimer = t;
+}
+
+function clearInputs(){
+  for (const k in keys) keys[k] = false;
+  for (const k in touch) touch[k] = false;
+  document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('active'));
+  dragStart = null; dragValue = 0;
+  document.body.classList.remove('boosting');
+}
+
+const missions = [
+  { id:'finish', text:'Reach the 5.00 KM finish line', done:false },
+  { id:'cells', text:'Collect 8 nitro cells', done:false },
+  { id:'near', text:'Score 8 close-call passes', done:false },
+  { id:'weather', text:'Ride through all 5 weather fronts', done:false },
+  { id:'integrity', text:'Finish with 50%+ bike integrity', done:false }
+];
+
+function resetMissions(){
+  missions.forEach(m => m.done = false);
+}
+
+function completeMission(id){
+  const m = missions.find(x => x.id === id);
+  if (m && !m.done){
+    m.done = true;
+    bonus += 1000;
+    showToast('MISSION COMPLETE', m.text + ' · +1000', false, 1.7);
+    beep(880,.12,'triangle',.12);
+    beep(1320,.18,'triangle',.09,.08);
+  }
+}
+
+function updateMissions(){
+  if (cells >= 8) completeMission('cells');
+  if (closeCalls >= 8) completeMission('near');
+  if (completedWeather.size >= 5) completeMission('weather');
+  const done = missions.filter(m=>m.done).length;
+  $('missionCount').textContent = done + '/5 COMPLETE';
+  $('missionList').innerHTML = missions.map(m =>
+    `<div class="mission ${m.done?'done':''}"><span class="check">${m.done?'✓':''}</span><span>${m.text}</span></div>`
+  ).join('');
+}
+
+function startGame(){
+  initAudio();
+  clearInputs();
+  position = 0; speed = 0; playerX = 0; lean = 0; steer = 0;
+  boost = 100; health = 100; timeLeft = 95; score = 0; bonus = 0; topSpeed = 0;
+  closeCalls = 0; cells = 0; hitCount = 0; invuln = 0; shake = 0; flash = 0;
+  weatherIndex = 0; completedWeather = new Set([0]);
+  traffic.length = 0; pickups.length = 0; sparks.length = 0;
+  resetMissions();
+  spawnInitial();
+  countdown = 3; countdownLast = 3; $('countNum').textContent = '3';
+  updateHUD();
+  setState('countdown');
+  beep(360,.12,'sine',.12);
+}
+
+function mainMenu(){
+  clearInputs();
+  setState('start');
+  position = 300; speed = 56; playerX = -0.12;
+  $('bestStart').textContent = best ? best.toLocaleString('en-US') : '— — —';
+}
+
+function pause(){
+  if (state === 'playing' || state === 'countdown'){
+    previousState = state;
+    setState('paused');
+    clearInputs();
+  } else if (state === 'paused'){
+    initAudio();
+    setState(previousState);
+  }
+}
+
+function finish(won, reason){
+  if (state !== 'playing') return;
+  if (won){
+    completeMission('finish');
+    if (health >= 50) completeMission('integrity');
+    bonus += Math.round(timeLeft * 55 + health * 20);
+  }
+  score = Math.max(0, Math.floor(position * 8 + bonus + closeCalls * 250 + cells * 150 - hitCount * 400));
+  const isBest = score > best;
+  if (isBest){
+    best = score;
+    try { localStorage.setItem('velocity-storm-best', String(best)); } catch(e) {}
+  }
+  const done = missions.filter(m=>m.done).length;
+  $('endBadge').textContent = won ? (isBest ? 'NEW PERSONAL BEST' : 'RACE COMPLETE') : 'MISSION FAILED';
+  $('endTitle').innerHTML = won ? 'FINISH<br>LINE.' : (health <= 0 ? 'BIKE<br>DOWN.' : 'OUT OF<br>TIME.');
+  $('endReason').textContent = reason;
+  $('finalScore').textContent = score.toLocaleString('en-US');
+  $('finalDist').textContent = Math.min(FINISH, position).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  $('finalNear').textContent = closeCalls;
+  $('finalMissions').textContent = done + '/5';
+  $('endMissions').innerHTML = missions.map(m =>
+    `<div class="mission ${m.done?'done':''}"><span class="check">${m.done?'✓':''}</span><span>${m.text}</span></div>`
+  ).join('');
+  setState('over');
+  clearInputs();
+  if (won){ beep(523,.18,'triangle',.13); beep(659,.18,'triangle',.13,.15); beep(880,.42,'triangle',.12,.3); }
+  else { beep(160,.45,'sawtooth',.13); noise(.35,.15); }
+}
+
+function spawnInitial(){
+  for (let i=0;i<18;i++) spawnTraffic(position + 120 + i*85 + rand(0,45));
+  for (let i=0;i<18;i++) spawnPickup(position + 160 + i*145 + rand(0,90));
+}
+
+function spawnTraffic(m){
+  traffic.push({
+    m,
+    lane: LANES[Math.floor(Math.random()*LANES.length)],
+    speed: rand(18,36),
+    type: Math.random() < .16 ? 'truck' : (Math.random() < .24 ? 'bike' : 'car'),
+    color: ['#e45b6f','#61d1d7','#f7b267','#8c78ff','#dad7cd','#72cc82'][Math.floor(rand(0,6))],
+    passed:false,
+    hit:false
+  });
+}
+
+function spawnPickup(m){
+  pickups.push({
+    m,
+    lane: LANES[Math.floor(Math.random()*LANES.length)],
+    phase: rand(0,Math.PI*2),
+    got:false
+  });
+}
+
+function currentWeather(){
+  return WEATHER[weatherIndex];
+}
+
+function roadCurve(m){
+  return Math.sin(m/240)*.55 + Math.sin(m/680)*.8 + Math.sin(m/1120)*.45;
+}
+
+function roadPoint(z){
+  const t = clamp(z / VIEW, 0, 1);
+  const p = 1 - t;
+  const horizon = H * .38;
+  const y = horizon + Math.pow(p, 2.08) * (H - horizon + 70);
+  const w = 72 + Math.pow(p, 1.18) * (Math.min(W*1.02, 980) - 72);
+  const curve = roadCurve(position + z);
+  const center = W*.5 + curve * p * W*.22 - playerX * p * W*.34;
+  return {x:center, y, w, p, t};
+}
+
+function roadAtWorld(m){
+  return roadPoint(m - position);
+}
+
+function poly(arr, color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(arr[0],arr[1]);
+  for(let i=2;i<arr.length;i+=2) ctx.lineTo(arr[i],arr[i+1]);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function rounded(x,y,w,h,r,color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(x,y,w,h,r);
+  ctx.fill();
+}
+
+let audio = null;
+function initAudio(){
+  if (audio) {
+    if (audio.ctx.state === 'suspended') audio.ctx.resume().catch(()=>{});
+    return;
+  }
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ac = new AC();
+    const master = ac.createGain(); master.gain.value = muted ? 0 : .38; master.connect(ac.destination);
+    const osc = ac.createOscillator(); osc.type='sawtooth';
+    const osc2 = ac.createOscillator(); osc2.type='triangle';
+    const filter = ac.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value = 420;
+    const gain = ac.createGain(); gain.gain.value = .001;
+    osc.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(master);
+    osc.start(); osc2.start();
+    const buffer = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<data.length;i++) data[i] = Math.random()*2-1;
+    audio = {ctx:ac, master, osc, osc2, filter, gain, buffer};
+  }catch(e){}
+}
+function updateAudio(){
+  if (!audio) return;
+  const t = audio.ctx.currentTime;
+  const active = state==='playing' || state==='countdown';
+  const r = clamp(speed / 92, 0, 1);
+  audio.osc.frequency.setTargetAtTime(38 + r*120 + (boosting()?18:0), t, .06);
+  audio.osc2.frequency.setTargetAtTime(78 + r*210, t, .06);
+  audio.filter.frequency.setTargetAtTime(350 + r*950 + (boosting()?600:0), t, .08);
+  audio.gain.gain.setTargetAtTime(active ? .025 + r*.028 : .0001, t, .12);
+}
+function beep(freq, dur=.12, type='sine', vol=.1, delay=0){
+  if (!audio || muted) return;
+  const ac = audio.ctx, t = ac.currentTime + delay;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol,t+.015);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(audio.master); o.start(t); o.stop(t+dur+.03);
+}
+function noise(dur=.25, vol=.12){
+  if (!audio || muted) return;
+  const ac = audio.ctx, t = ac.currentTime;
+  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = audio.buffer; f.type='lowpass'; f.frequency.value=950;
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  src.connect(f); f.connect(g); g.connect(audio.master); src.start(t); src.stop(t+dur);
+}
+function toggleSound(){
+  muted = !muted;
+  initAudio();
+  if (audio) audio.master.gain.setTargetAtTime(muted?0:.38, audio.ctx.currentTime, .05);
+  $('soundWave').setAttribute('d', muted ? 'm16 9 6 6m0-6-6 6' : 'M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14');
+}
+
+function boosting(){
+  const braking = keys.KeyS || keys.ArrowDown || touch.brake;
+  const want = keys.Space || keys.ShiftLeft || keys.ShiftRight || touch.boost;
+  return state==='playing' && want && boost > .5 && !braking && health > 0;
+}
+
+function update(dt){
+  if (state === 'start'){
+    position += 32 * dt;
+    speed = 58;
+    playerX = Math.sin(clock*.55)*.18;
+    updateObjects(dt, false);
+    return;
+  }
+
+  if (state === 'countdown'){
+    countdown -= dt;
+    speed = Math.min(speed + dt*16, 35);
+    const n = Math.max(1, Math.ceil(countdown));
+    if (n !== countdownLast){
+      countdownLast = n;
+      $('countNum').textContent = n;
+      beep(360,.11,'sine',.12);
+    }
+    if (countdown <= 0){
+      setState('playing');
+      showToast('GO! OWN THE STORM.', 'MISSIONS ACTIVE · BOOST IS READY', false, 2);
+      beep(760,.28,'triangle',.15);
+    }
+    return;
+  }
+
+  if (state !== 'playing') return;
+
+  timeLeft -= dt;
+  invuln = Math.max(0, invuln - dt);
+  flash = Math.max(0, flash - dt*2.7);
+  shake = Math.max(0, shake - dt*2.4);
+
+  const newWeather = clamp(Math.floor(position / 1000), 0, 4);
+  if (newWeather !== weatherIndex){
+    weatherIndex = newWeather;
+    completedWeather.add(weatherIndex);
+    const w = currentWeather();
+    timeLeft += 8;
+    bonus += 450;
+    boost = Math.min(100, boost + 18);
+    showToast(w.icon + ' ' + w.name + ' FRONT', '+8 SEC · +18% NITRO', false, 2.1);
+    beep(520,.16,'triangle',.13);
+  } else {
+    completedWeather.add(weatherIndex);
+  }
+
+  const w = currentWeather();
+  const left = keys.ArrowLeft || keys.KeyA || touch.left;
+  const right = keys.ArrowRight || keys.KeyD || touch.right;
+  steer = clamp((right?1:0) - (left?1:0) + dragValue, -1, 1);
+  const brake = keys.KeyS || keys.ArrowDown || touch.brake;
+  const boostOn = boosting();
+
+  let target = brake ? 28 : (boostOn ? 95*w.max : 72*w.max);
+  if (Math.abs(playerX) > 1.05) {
+    target = Math.min(target, 34);
+    health = Math.max(0, health - dt*7);
+    shake = Math.max(shake,.25);
+  }
+  const accel = target > speed ? (boostOn ? 42 : 24) : (brake ? 56 : 20);
+  speed += clamp(target - speed, -accel*dt, accel*dt);
+
+  if (boostOn){
+    boost = Math.max(0, boost - dt*27);
+    bonus += dt*24;
+  } else {
+    boost = Math.min(100, boost + dt*(weatherIndex===0?10:8));
+  }
+  document.body.classList.toggle('boosting', boostOn);
+
+  const grip = w.grip;
+  playerX += steer * dt * (1.15 + speed/70) * grip;
+  playerX -= roadCurve(position+80) * dt * (speed/95) * .19;
+  playerX = clamp(playerX, -1.34, 1.34);
+  lean = lerp(lean, steer*.75 - roadCurve(position+100)*.08, dt*7);
+
+  position += speed * dt;
+  topSpeed = Math.max(topSpeed, speed*3.6);
+  updateObjects(dt, true);
+  updateMissions();
+
+  score = Math.max(0, Math.floor(position*8 + bonus + closeCalls*250 + cells*150 - hitCount*400));
+  if (health <= 0) finish(false, 'Your superbike could not survive the punishment.');
+  else if (timeLeft <= 0) finish(false, 'The clock expired before the finish line.');
+  else if (position >= FINISH) finish(true, 'You reached the end of the race through all five weather fronts.');
+}
+
+function updateObjects(dt, active){
+  for (let i=traffic.length-1;i>=0;i--){
+    const c = traffic[i];
+    c.m += c.speed * dt * .28;
+    const z = c.m - position;
+
+    if (active && z < 0 && !c.passed){
+      c.passed = true;
+      const diff = Math.abs(playerX - c.lane);
+      if (!c.hit && diff < .24 && diff > .08 && speed > 52){
+        closeCalls++;
+        boost = Math.min(100, boost + 7);
+        bonus += 180;
+        showToast('CLOSE CALL +' + closeCalls, 'NITRO +7% · THREAD THE NEEDLE', false, 1);
+        beep(980,.08,'sine',.07);
+      }
+    }
+
+    if (active && Math.abs(z) < 12 && !c.hit && invuln <= 0){
+      const width = c.type==='truck' ? .22 : (c.type==='bike' ? .11 : .17);
+      if (Math.abs(playerX - c.lane) < width){
+        collide(c);
+      }
+    }
+
+    if (z < -90){
+      traffic.splice(i,1);
+      spawnTraffic(position + VIEW + rand(70,230));
+    }
+  }
+
+  for (let i=pickups.length-1;i>=0;i--){
+    const p = pickups[i];
+    const z = p.m - position;
+    if (active && !p.got && Math.abs(z) < 12 && Math.abs(playerX - p.lane) < .16){
+      p.got = true;
+      cells++;
+      boost = Math.min(100, boost + 19);
+      bonus += 180;
+      showToast('NITRO CELL', cells + '/8 COLLECTED · BOOST +19%', false, .9);
+      beep(1200,.1,'triangle',.08);
+    }
+    if (z < -70 || p.got){
+      pickups.splice(i,1);
+      spawnPickup(position + VIEW + rand(90,260));
+    }
+  }
+}
+
+function collide(c){
+  c.hit = true;
+  hitCount++;
+  health = Math.max(0, health - (c.type==='truck'?34:26));
+  speed *= .42;
+  boost = Math.max(0, boost - 15);
+  invuln = 1.4;
+  shake = 1;
+  flash = 1;
+  burst(W/2, H*.82);
+  showToast('CONTACT!', 'BIKE INTEGRITY DAMAGED', true, 1.3);
+  noise(.35,.25); beep(85,.22,'sawtooth',.13);
+}
+
+function burst(x,y){
+  for(let i=0;i<36;i++){
+    sparks.push({x,y,vx:rand(-310,310),vy:rand(-360,80),life:rand(.25,.75),color:Math.random()<.45?'#fff1a8':'#ff7a45'});
+  }
+}
+
+function updateSparks(dt){
+  for(let i=sparks.length-1;i>=0;i--){
+    const p = sparks[i];
+    p.life -= dt;
+    if (p.life <= 0){ sparks.splice(i,1); continue; }
+    p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 610*dt;
+  }
+}
+
+function buildWeatherParticles(){
+  weatherParticles.length = 0;
+  for(let i=0;i<180;i++){
+    weatherParticles.push({x:Math.random()*W,y:Math.random()*H,v:rand(.35,1.2),s:rand(.4,1.8),a:rand(.25,.9)});
+  }
+}
+
+function drawBackground(){
+  const w = currentWeather();
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,w.sky[0]); g.addColorStop(.5,w.sky[1]); g.addColorStop(1,w.sky[2]);
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  const horizon = H*.38;
+  ctx.fillStyle = 'rgba(255,255,255,.6)';
+  for(let i=0;i<55;i++){
+    const x = (i*97 + Math.sin(i)*400 + clock*8) % (W+80) - 40;
+    const y = 25 + (i*47)%Math.max(80,horizon-30);
+    const a = weatherIndex===2 ? .07 : .18;
+    ctx.globalAlpha = a;
+    ctx.fillRect(x,y,1.5,1.5);
+  }
+  ctx.globalAlpha = 1;
+
+  const sunX = W*.72 + Math.sin(position/500)*25;
+  const sunY = H*.20;
+  const r = Math.min(W,H)*.09;
+  const rg = ctx.createRadialGradient(sunX,sunY,0,sunX,sunY,r*3);
+  rg.addColorStop(0,'rgba(255,152,103,.35)');
+  rg.addColorStop(1,'rgba(255,152,103,0)');
+  ctx.fillStyle = rg; ctx.fillRect(sunX-r*3,sunY-r*3,r*6,r*6);
+  ctx.fillStyle = weatherIndex===4 ? '#d26884' : '#ff9f75';
+  ctx.beginPath(); ctx.arc(sunX,sunY,r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(20,20,35,.55)';
+  for(let i=0;i<7;i++) ctx.fillRect(sunX-r, sunY-r*.55+i*r*.18, r*2, 3);
+
+  drawCity(horizon);
+}
+
+function drawCity(horizon){
+  ctx.save();
+  ctx.fillStyle = 'rgba(9,14,27,.74)';
+  let x = -30;
+  let seed = 1;
+  while(x < W+40){
+    seed = (seed*16807)%2147483647;
+    const bw = 18 + (seed%70);
+    seed = (seed*16807)%2147483647;
+    const bh = 40 + (seed%120);
+    ctx.fillRect(x, horizon-bh, bw, bh+20);
+    if (bw > 28){
+      for(let wx=x+6; wx<x+bw-6; wx+=10){
+        for(let wy=horizon-bh+12; wy<horizon-8; wy+=14){
+          if (((wx+wy+seed)|0)%5===0){
+            ctx.fillStyle = Math.random()<.5 ? 'rgba(103,243,231,.35)' : 'rgba(255,122,69,.32)';
+            ctx.fillRect(wx,wy,3,4);
+            ctx.fillStyle = 'rgba(9,14,27,.74)';
+          }
+        }
+      }
+    }
+    x += bw + 3;
+  }
+  ctx.restore();
+}
+
+function renderRoad(){
+  const slices = 62;
+  for(let i=slices;i>0;i--){
+    const z1 = (i-1)/slices*VIEW;
+    const z2 = i/slices*VIEW;
+    const p1 = roadPoint(z1), p2 = roadPoint(z2);
+    const world = position + z1;
+    const band = Math.floor(world/24)%2;
+
+    ctx.fillStyle = band ? '#162030' : '#121b2a';
+    ctx.fillRect(0,p2.y,W,p1.y-p2.y+1);
+
+    poly([p1.x-p1.w*.68,p1.y,p2.x-p2.w*.68,p2.y,p2.x+p2.w*.68,p2.y,p1.x+p1.w*.68,p1.y], band?'#2c3142':'#252d3d');
+    poly([p1.x-p1.w*.56,p1.y,p2.x-p2.w*.56,p2.y,p2.x+p2.w*.56,p2.y,p1.x+p1.w*.56,p1.y], band?'#303340':'#252a37');
+
+    poly([p1.x-p1.w*.575,p1.y,p2.x-p2.w*.575,p2.y,p2.x-p2.w*.55,p2.y,p1.x-p1.w*.55,p1.y], '#67f3e7');
+    poly([p1.x+p1.w*.55,p1.y,p2.x+p2.w*.55,p2.y,p2.x+p2.w*.575,p2.y,p1.x+p1.w*.575,p1.y], '#ff7a45');
+
+    if (Math.floor(world/16)%2===0){
+      for(let lane of [-.185,.185]){
+        poly([p1.x+p1.w*lane-p1.w*.008,p1.y,p2.x+p2.w*lane-p2.w*.008,p2.y,p2.x+p2.w*lane+p2.w*.008,p2.y,p1.x+p1.w*lane+p1.w*.008,p1.y], 'rgba(228,237,247,.72)');
+      }
+    }
+
+    if (i%8===0){
+      ctx.globalAlpha = .12 * p1.p;
+      poly([p1.x-p1.w*.46,p1.y,p2.x-p2.w*.46,p2.y,p2.x-p2.w*.25,p2.y,p1.x-p1.w*.25,p1.y], '#67f3e7');
+      poly([p1.x+p1.w*.25,p1.y,p2.x+p2.w*.25,p2.y,p2.x+p2.w*.46,p2.y,p1.x+p1.w*.46,p1.y], '#ff7a45');
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  const finishZ = FINISH - position;
+  if (finishZ > 0 && finishZ < VIEW){
+    const p = roadPoint(finishZ);
+    const h = Math.max(6, p.w*.08);
+    ctx.save();
+    ctx.translate(p.x, p.y-h);
+    ctx.fillStyle = '#101827';
+    ctx.fillRect(-p.w*.58,-h,p.w*1.16,h);
+    const sq = p.w*.055;
+    for(let r=0;r<2;r++) for(let c=0;c<18;c++){
+      ctx.fillStyle = (r+c)%2 ? '#fff' : '#111';
+      ctx.fillRect(-p.w*.5+c*sq,-h+r*sq,sq,sq);
+    }
+    ctx.fillStyle = '#ff7a45';
+    ctx.font = `900 ${Math.max(8,p.w*.08)}px Arial`;
+    ctx.textAlign='center';
+    ctx.fillText('FINISH',0,-h-6);
+    ctx.restore();
+  }
+}
+
+function drawObjects(){
+  const all = [
+    ...pickups.map(o => ({...o, kind:'pickup'})),
+    ...traffic.map(o => ({...o, kind:'traffic'}))
+  ].sort((a,b)=>b.m-a.m);
+
+  for(const o of all){
+    const z = o.m - position;
+    if (z < -20 || z > VIEW) continue;
+    const p = roadAtWorld(o.m);
+    const x = p.x + p.w * o.lane * .62;
+    if (o.kind === 'pickup') drawPickup(x,p.y,p.w,p.p,o);
+    else drawVehicle(x,p.y,p.w,p.p,o);
+  }
+}
+
+function drawPickup(x,y,roadW,p,o){
+  const s = Math.max(4, roadW*.045);
+  y -= s*1.6 + Math.sin(clock*5+o.phase)*s*.25;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(clock*3);
+  ctx.shadowColor = '#67f3e7';
+  ctx.shadowBlur = 18*p;
+  ctx.strokeStyle = '#67f3e7';
+  ctx.lineWidth = Math.max(2,s*.12);
+  ctx.beginPath(); ctx.arc(0,0,s,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = 'rgba(103,243,231,.22)';
+  ctx.beginPath(); ctx.arc(0,0,s*.62,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = `900 ${s*.9}px Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('N',0,1);
+  ctx.restore();
+}
+
+function drawVehicle(x,y,roadW,p,c){
+  const baseW = roadW * (c.type==='truck'? .17 : c.type==='bike'? .075 : .13);
+  const w = Math.max(4, baseW);
+  const h = w * (c.type==='truck'?1.65:c.type==='bike'?1.55:1.15);
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.globalAlpha = c.hit ? .55 : 1;
+  ctx.fillStyle = 'rgba(0,0,0,.38)';
+  ctx.beginPath(); ctx.ellipse(0,-2,w*.72,w*.16,0,0,Math.PI*2); ctx.fill();
+
+  if (c.type === 'bike'){
+    rounded(-w*.22,-h,w*.44,h*.88,w*.18,'#0c1220');
+    rounded(-w*.46,-h*.65,w*.92,h*.30,w*.13,c.color);
+    rounded(-w*.28,-h*1.05,w*.56,h*.32,w*.16,'#dfe7e4');
+    ctx.fillStyle = '#101b2b'; ctx.fillRect(-w*.22,-h*.98,w*.44,h*.09);
+    ctx.shadowColor = '#ff4f6f'; ctx.shadowBlur = 12*p;
+    rounded(-w*.35,-h*.22,w*.7,h*.07,2,'#ff4f6f');
+  } else {
+    rounded(-w*.52,-h,w*1.04,h*.92,w*.08,c.color);
+    rounded(-w*.42,-h*.88,w*.84,h*.33,w*.04,'#18283a');
+    rounded(-w*.48,-h*.25,w*.96,h*.18,w*.04,'#111927');
+    if (c.type==='truck'){
+      rounded(-w*.44,-h*1.12,w*.88,h*.3,w*.05,'#d4d1c4');
+      ctx.fillStyle='rgba(0,0,0,.22)'; ctx.fillRect(-w*.04,-h*.85,w*.08,h*.64);
+    }
+    ctx.shadowColor = '#ff4f6f'; ctx.shadowBlur = 13*p;
+    rounded(-w*.42,-h*.48,w*.25,h*.09,2,'#ff4f6f');
+    rounded(w*.17,-h*.48,w*.25,h*.09,2,'#ff4f6f');
+  }
+  ctx.restore();
+}
+
+function drawPlayer(){
+  const x = W*.5;
+  const y = H*.86;
+  const s = Math.min(W/430,H/820,1.32);
+  const boostOn = boosting();
+  ctx.save();
+  if (shake && state==='playing') ctx.translate(rand(-7,7)*shake, rand(-4,4)*shake);
+  ctx.translate(x + lean*18*s, y);
+  ctx.rotate(lean*.18);
+  ctx.scale(s,s);
+
+  ctx.fillStyle='rgba(0,0,0,.45)';
+  ctx.beginPath(); ctx.ellipse(0,8,58,13,0,0,Math.PI*2); ctx.fill();
+
+  if (boostOn){
+    for(let side of [-1,1]){
+      ctx.shadowColor='#67f3e7'; ctx.shadowBlur=22;
+      poly([side*24,-20,side*38,-20,side*34,70+Math.random()*35,side*20,10], '#67f3e7');
+      ctx.shadowBlur=0;
+    }
+  }
+
+  if (invuln>0 && Math.sin(clock*32)>0) ctx.globalAlpha=.55;
+  rounded(-13,-58,26,72,10,'#07101b');
+  rounded(-10,-54,20,64,7,'#263344');
+  poly([-30,-58,-22,-92,0,-110,22,-92,30,-58,16,-37,-16,-37], '#193248');
+  poly([-21,-84,-31,-124,-21,-145,-8,-112,-9,-80], '#101c2d');
+  poly([21,-84,31,-124,21,-145,8,-112,9,-80], '#101c2d');
+  ctx.strokeStyle='#ff7a45'; ctx.lineWidth=5; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-28,-119); ctx.lineTo(-46,-139); ctx.moveTo(28,-119); ctx.lineTo(46,-139); ctx.stroke();
+  rounded(-53,-145,17,8,4,'#8192a6'); rounded(36,-145,17,8,4,'#8192a6');
+  poly([-28,-103,-36,-80,-31,-45,-20,-42,-16,-82], '#0d1727');
+  poly([28,-103,36,-80,31,-45,20,-42,16,-82], '#0d1727');
+  poly([-22,-111,-13,-158,0,-170,13,-158,22,-111,12,-92,-12,-92], '#17283b');
+  poly([-18,-154,0,-169,18,-154,12,-128,-12,-128], '#ff7a45');
+  rounded(-20,-203,40,42,18,'#dfe8e8');
+  rounded(-17,-181,34,12,6,'#0b1a2d');
+  poly([-7,-202,7,-202,11,-164,-1,-160], '#67f3e7');
+  ctx.shadowColor='#ff4f6f'; ctx.shadowBlur=18;
+  rounded(-20,-42,40,7,3,'#ff4f6f');
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#edf6fb'; ctx.font='900 8px Arial'; ctx.textAlign='center'; ctx.fillText('07',0,-53);
+  ctx.restore();
+}
+
+function drawWeather(dt){
+  const w = weatherIndex;
+  if (w === 0) return;
+  ctx.save();
+
+  if (w === 1 || w === 4){
+    ctx.strokeStyle = w===4 ? 'rgba(180,210,255,.45)' : 'rgba(140,210,255,.42)';
+    ctx.lineWidth = 1.2;
+    for(const p of weatherParticles){
+      p.y += (620 + speed*4) * dt * p.v;
+      p.x += -90 * dt * p.v;
+      if (p.y > H+40){ p.y = -40; p.x = Math.random()*W; }
+      if (p.x < -40) p.x = W+40;
+      ctx.globalAlpha = p.a;
+      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-16*p.v,p.y+36*p.v); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = w===4 ? 'rgba(15,20,40,.22)' : 'rgba(40,80,110,.15)';
+    ctx.fillRect(0,0,W,H);
+  }
+
+  if (w === 2){
+    const g = ctx.createLinearGradient(0,H*.28,0,H);
+    g.addColorStop(0,'rgba(210,225,230,.36)');
+    g.addColorStop(.65,'rgba(185,200,208,.18)');
+    g.addColorStop(1,'rgba(210,225,230,.05)');
+    ctx.fillStyle = g; ctx.fillRect(0,H*.25,W,H*.75);
+  }
+
+  if (w === 3){
+    ctx.fillStyle = 'rgba(220,240,255,.12)';
+    ctx.fillRect(0,0,W,H);
+    for(const p of weatherParticles){
+      p.y += (70 + speed*.9) * dt * p.v;
+      p.x += Math.sin(clock+p.y*.01)*28*dt;
+      if (p.y > H+10){ p.y = -10; p.x = Math.random()*W; }
+      ctx.globalAlpha = p.a*.75;
+      ctx.fillStyle='white';
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.s*1.25,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  if (w === 4 && state==='playing'){
+    stormTimer -= dt;
+    if (stormTimer <= 0){
+      stormTimer = rand(1.1,3.2);
+      lightningFlash = 1;
+      beep(90,.15,'sawtooth',.06);
+    }
+  }
+  ctx.restore();
+}
+
+function drawSparks(){
+  ctx.save();
+  for(const p of sparks){
+    ctx.globalAlpha = clamp(p.life/.45,0,1);
+    ctx.strokeStyle = p.color; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.vx*.035,p.y-p.vy*.035); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+function render(dt){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  drawBackground();
+  if (shake && state==='playing') ctx.save(), ctx.translate(rand(-6,6)*shake, rand(-4,4)*shake);
+  renderRoad();
+  drawObjects();
+  drawPlayer();
+  drawSparks();
+  if (shake && state==='playing') ctx.restore();
+  drawWeather(dt);
+
+  if (boosting()){
+    const g = ctx.createRadialGradient(W*.5,H*.9,10,W*.5,H*.9,Math.min(W,H)*.75);
+    g.addColorStop(0,'rgba(103,243,231,.12)');
+    g.addColorStop(1,'rgba(103,243,231,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  }
+
+  $('flash').style.opacity = flash;
+  lightningFlash = Math.max(0, lightningFlash - dt*3.8);
+  $('lightning').style.opacity = lightningFlash * .42;
+}
+
+function updateHUD(){
+  const kmh = Math.round(speed*3.6);
+  const progress = clamp(position / FINISH * 100, 0, 100);
+  $('timer').textContent = Math.max(0,timeLeft).toFixed(1);
+  $('timer').classList.toggle('urgent', timeLeft < 15);
+  $('speedText').textContent = String(kmh).padStart(3,'0');
+  $('gearText').textContent = kmh < 8 ? 'N' : String(clamp(Math.ceil(kmh/58),1,6));
+  $('scoreText').textContent = String(Math.floor(score)).padStart(6,'0');
+  $('routeFill').style.width = progress + '%';
+  $('routeDot').style.left = progress + '%';
+  $('distanceText').textContent = (Math.min(position,FINISH)/1000).toFixed(2) + ' KM';
+  $('sectorText').textContent = 'SECTOR ' + (weatherIndex+1) + ' / ' + currentWeather().name + ' FRONT';
+  const c = roadCurve(position+180);
+  $('nextText').textContent = c > .45 ? '↗ RIGHT SWEEP' : (c < -.45 ? '↖ LEFT SWEEP' : '↑ OPEN STRAIGHT');
+  $('weatherName').textContent = currentWeather().name;
+  $('weatherIcon').textContent = currentWeather().icon;
+  $('weatherEffect').textContent = currentWeather().effect;
+  $('boostPct').textContent = Math.round(boost) + '%';
+  $('boostFill').style.width = boost + '%';
+
+  const hp = [...document.querySelectorAll('.hp')];
+  hp.forEach((p,i) => {
+    const full = health > i*20;
+    p.classList.toggle('empty', !full);
+    p.classList.toggle('danger', full && health < 35);
+  });
+  updateMissions();
+}
+
+$('startBtn').addEventListener('click', startGame);
+$('againBtn').addEventListener('click', startGame);
+$('restartBtn').addEventListener('click', startGame);
+$('pauseBtn').addEventListener('click', pause);
+$('resumeBtn').addEventListener('click', pause);
+$('menuBtn').addEventListener('click', mainMenu);
+$('mainBtn').addEventListener('click', mainMenu);
+$('soundBtn').addEventListener('click', toggleSound);
+$('fullBtn').addEventListener('click', () => {
+  try{
+    const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    if (p && p.catch) p.catch(()=>{});
+  }catch(e){}
+});
+
+addEventListener('keydown', e => {
+  if (['ArrowLeft','ArrowRight','ArrowDown','ArrowUp','Space'].includes(e.code)) e.preventDefault();
+  keys[e.code] = true;
+  if (e.repeat) return;
+  if (e.code === 'KeyM') toggleSound();
+  if (e.code === 'Escape' || e.code === 'KeyP') pause();
+  if (e.code === 'Enter' && (state==='start' || state==='over')) startGame();
+});
+addEventListener('keyup', e => keys[e.code] = false);
+addEventListener('blur', () => { if (state==='playing' || state==='countdown') pause(); clearInputs(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && (state==='playing' || state==='countdown')) pause(); });
+
+function bindTouch(id, action){
+  const b = $(id); let pid = null;
+  b.addEventListener('pointerdown', e => {
+    e.preventDefault(); initAudio();
+    pid = e.pointerId; touch[action] = true; b.classList.add('active');
+    try{ b.setPointerCapture(pid); }catch(err){}
+  });
+  const up = e => {
+    if (pid !== e.pointerId) return;
+    touch[action] = false; b.classList.remove('active'); pid = null;
+  };
+  b.addEventListener('pointerup', up);
+  b.addEventListener('pointercancel', up);
+  b.addEventListener('lostpointercapture', up);
+}
+bindTouch('touchLeft','left');
+bindTouch('touchRight','right');
+bindTouch('touchBrake','brake');
+bindTouch('touchBoost','boost');
+
+canvas.addEventListener('pointerdown', e => {
+  if (state !== 'playing') return;
+  dragStart = e.clientX; dragValue = 0;
+  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+});
+canvas.addEventListener('pointermove', e => {
+  if (dragStart !== null) dragValue = clamp((e.clientX - dragStart)/80, -1, 1);
+});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev => canvas.addEventListener(ev, () => { dragStart=null; dragValue=0; }));
+
+function loop(now){
+  const dt = Math.min((now-last)/1000, .04);
+  last = now;
+  if (state !== 'paused') clock += dt;
+  update(dt);
+  updateSparks(dt);
+  if (toastTimer > 0){
+    toastTimer -= dt;
+    if (toastTimer <= 0) $('toast').classList.remove('show');
+  }
+  updateHUD();
+  updateAudio();
+  render(dt);
+  requestAnimationFrame(loop);
+}
+
+spawnInitial();
+updateMissions();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
